@@ -218,18 +218,36 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
     }
   }
 
+  // Hàm kiểm tra tab web an toàn
+  function isValidWebTab(t) {
+    if (!t || typeof t !== "object") return false;
+    const url = String(t.url || t.pendingUrl || "");
+    return Boolean(url && !url.startsWith("chrome://") && !url.startsWith("chrome-extension://") && !url.startsWith("edge://"));
+  }
+
   // 8.5 Tự động gom mã giảm giá trên Shopee
   async function autoCollectShopeeVouchers() {
     try {
       let tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-      let tab = tabs.find(t => t.url && t.url.includes("shopee.vn"));
+      let tab = tabs.find(t => {
+        const u = String(t.url || t.pendingUrl || "");
+        return u.includes("shopee.vn");
+      });
+
       if (!tab) {
         tabs = await chrome.tabs.query({ active: true });
-        tab = tabs.find(t => t.url && t.url.includes("shopee.vn"));
+        tab = tabs.find(t => {
+          const u = String(t.url || t.pendingUrl || "");
+          return u.includes("shopee.vn");
+        });
       }
+
       if (!tab) {
         tabs = await chrome.tabs.query({});
-        tab = tabs.find(t => t.url && t.url.includes("shopee.vn"));
+        tab = tabs.find(t => {
+          const u = String(t.url || t.pendingUrl || "");
+          return u.includes("shopee.vn");
+        });
       }
 
       if (!tab || !tab.id) {
@@ -242,30 +260,32 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
           let count = 0;
           const vouchersFound = [];
 
-          // 1. Tự động click tất cả các nút 'Lưu' hoặc 'Nhận' mã giảm giá
-          const buttons = Array.from(document.querySelectorAll("button, div[role='button']"));
-          buttons.forEach((b) => {
-            const txt = (b.innerText || "").trim();
-            if (txt === "Lưu" || txt === "Nhận" || txt.includes("Lưu mã")) {
-              try {
-                b.click();
-                count++;
-              } catch (e) {}
-            }
-          });
+          try {
+            // 1. Tự động click tất cả các nút 'Lưu' hoặc 'Nhận' mã giảm giá
+            const buttons = Array.from(document.querySelectorAll("button, div[role='button']"));
+            buttons.forEach((b) => {
+              const txt = (b.innerText || "").trim();
+              if (txt === "Lưu" || txt === "Nhận" || txt.includes("Lưu mã")) {
+                try {
+                  b.click();
+                  count++;
+                } catch (e) {}
+              }
+            });
 
-          // 2. Thu thập các dòng text chứa thông tin giảm giá/voucher trên trang
-          const elements = Array.from(document.querySelectorAll("span, div, p"));
-          elements.forEach((el) => {
-            const t = (el.innerText || "").trim();
-            if (
-              (t.includes("Giảm") || t.includes("Voucher") || t.includes("Đơn Tối Thiểu") || t.includes("Freeship")) &&
-              t.length > 5 && t.length < 80 &&
-              !vouchersFound.includes(t)
-            ) {
-              vouchersFound.push(t);
-            }
-          });
+            // 2. Thu thập các dòng text chứa thông tin giảm giá/voucher trên trang
+            const elements = Array.from(document.querySelectorAll("span, div, p"));
+            elements.forEach((el) => {
+              const t = (el.innerText || "").trim();
+              if (
+                (t.includes("Giảm") || t.includes("Voucher") || t.includes("Đơn Tối Thiểu") || t.includes("Freeship")) &&
+                t.length > 5 && t.length < 80 &&
+                !vouchersFound.includes(t)
+              ) {
+                vouchersFound.push(t);
+              }
+            });
+          } catch (e) {}
 
           return {
             isShopee: true,
@@ -287,20 +307,20 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
   // 9. Lấy nội dung từ Tab đang mở
   async function getActiveTabContext() {
     try {
-      // 1. Tìm tab đang active trong cửa sổ gần nhất (loại bỏ chính tab sidepanel)
+      // 1. Tìm tab đang active trong cửa sổ gần nhất
       let tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-      let tab = tabs.find(t => t.url && !t.url.startsWith("chrome-extension://") && !t.url.startsWith("chrome://"));
+      let tab = tabs.find(isValidWebTab);
       
       // 2. Fallback nếu không thấy trong lastFocusedWindow
       if (!tab) {
         tabs = await chrome.tabs.query({ active: true });
-        tab = tabs.find(t => t.url && !t.url.startsWith("chrome-extension://") && !t.url.startsWith("chrome://"));
+        tab = tabs.find(isValidWebTab);
       }
 
-      // 3. Fallback thêm: lấy tab bất kỳ không phải extension
+      // 3. Fallback thêm: lấy tab bất kỳ hợp lệ
       if (!tab) {
         tabs = await chrome.tabs.query({});
-        tab = tabs.find(t => t.url && !t.url.startsWith("chrome-extension://") && !t.url.startsWith("chrome://"));
+        tab = tabs.find(isValidWebTab);
       }
 
       if (!tab || !tab.id) {
@@ -311,28 +331,37 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: () => {
-          const selection = window.getSelection().toString().trim();
-          const title = document.title || "";
-          const url = window.location.href;
-          
-          // Lấy meta description nếu có
-          const metaDesc = document.querySelector('meta[name="description"]')?.content || "";
-          
-          // Lấy text trên trang (loại bỏ script/style rác, lấy text sạch)
-          let bodyClone = document.body.cloneNode(true);
-          const scripts = bodyClone.querySelectorAll("script, style, noscript, svg");
-          scripts.forEach(s => s.remove());
-          
-          let text = (bodyClone.innerText || "")
-            .replace(/\t+/g, " ")
-            .replace(/\n\s*\n/g, "\n")
-            .slice(0, 15000);
+          try {
+            const selection = window.getSelection() ? window.getSelection().toString().trim() : "";
+            const title = document.title || "";
+            const url = window.location.href || "";
+            
+            // Lấy meta description nếu có
+            const metaTag = document.querySelector('meta[name="description"]');
+            const metaDesc = metaTag ? metaTag.getAttribute("content") || "" : "";
+            
+            // Lấy text trên trang (loại bỏ script/style rác, lấy text sạch)
+            let bodyClone = document.body ? document.body.cloneNode(true) : null;
+            if (bodyClone) {
+              const scripts = bodyClone.querySelectorAll("script, style, noscript, svg, iframe");
+              scripts.forEach(s => s.remove());
+            }
+            
+            let text = bodyClone ? (bodyClone.innerText || "") : "";
+            text = text.replace(/\t+/g, " ").replace(/\n\s*\n/g, "\n").slice(0, 15000);
 
-          return { 
-            title, 
-            url, 
-            text: selection ? `(Văn bản người dùng bôi đen):\n${selection}\n\n(Nội dung trang web):\n${text}` : (metaDesc ? `(Mô tả trang): ${metaDesc}\n\n${text}` : text)
-          };
+            return { 
+              title, 
+              url, 
+              text: selection ? `(Văn bản người dùng bôi đen):\n${selection}\n\n(Nội dung trang web):\n${text}` : (metaDesc ? `(Mô tả trang): ${metaDesc}\n\n${text}` : text)
+            };
+          } catch (err) {
+            return {
+              title: document.title || "",
+              url: window.location.href || "",
+              text: document.body ? document.body.innerText.slice(0, 6000) : ""
+            };
+          }
         },
       });
 
