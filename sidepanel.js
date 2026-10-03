@@ -117,7 +117,25 @@ document.addEventListener("DOMContentLoaded", () => {
       const action = btn.dataset.action;
 
       let prompt = "";
-      if (action === "affiliate_copy") {
+      if (action === "shopee_voucher") {
+        appendMessage("ai", "⚡ Đang tự động quét và kích hoạt lưu toàn bộ mã giảm giá trên trang Shopee vào ví của bạn...");
+        const voucherData = await autoCollectShopeeVouchers();
+        
+        let shopeeSummary = "";
+        if (voucherData && voucherData.isShopee) {
+          shopeeSummary = `\n[DỮ LIỆU GOM MÃ SHOPEE THỰC TẾ]:
+- Đã tự động kích hoạt lưu ${voucherData.collected} mã giảm giá trên trang!
+- Các thông tin khuyến mãi/voucher trích xuất: ${voucherData.vouchers.join(" | ")}`;
+        }
+
+        prompt = `Bạn là một chuyên gia Săn Sale & Tối ưu giá MMO hàng đầu. 
+Dựa trên thông tin sản phẩm và dữ liệu voucher sau:${shopeeSummary}
+
+Hãy lập bảng phân tích săn deal và hướng dẫn lấy mã tốt nhất:
+1. 🎟️ TỔNG HỢP CÁC MÃ GIẢM GIÁ (Voucher Shop, Voucher Shopee, Mã Freeship Xtra, Hoàn Xu).
+2. 💰 HƯỚNG DẪN GHÉP MÃ ĐỂ CÓ GIÁ TỐT NHẤT (Chỉ rõ mức giảm ước tính và giá sau khi áp full mã).
+3. 📢 ĐOẠN TIN NHẮN BÁO DEAL / AFFILIATE KÊU GỌI SĂN MÃ (Để đăng group săn sale / Telegram / Threads / Zalo giật tít, thôi thúc lưu mã trước khi hết).`;
+      } else if (action === "affiliate_copy") {
         prompt = `Bạn là một chuyên gia Copywriting & Marketing MMO hàng đầu. 
 Dựa trên toàn bộ thông tin sản phẩm trên trang web này, hãy tạo ngay một bộ nội dung bán hàng / tiếp thị liên kết (Affiliate) cực kỳ cuốn hút, gồm:
 
@@ -198,6 +216,72 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
       isGenerating = false;
       btnSend.disabled = false;
     }
+  }
+
+  // 8.5 Tự động gom mã giảm giá trên Shopee
+  async function autoCollectShopeeVouchers() {
+    try {
+      let tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      let tab = tabs.find(t => t.url && t.url.includes("shopee.vn"));
+      if (!tab) {
+        tabs = await chrome.tabs.query({ active: true });
+        tab = tabs.find(t => t.url && t.url.includes("shopee.vn"));
+      }
+      if (!tab) {
+        tabs = await chrome.tabs.query({});
+        tab = tabs.find(t => t.url && t.url.includes("shopee.vn"));
+      }
+
+      if (!tab || !tab.id) {
+        return { isShopee: false, collected: 0, vouchers: [] };
+      }
+
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: () => {
+          let count = 0;
+          const vouchersFound = [];
+
+          // 1. Tự động click tất cả các nút 'Lưu' hoặc 'Nhận' mã giảm giá
+          const buttons = Array.from(document.querySelectorAll("button, div[role='button']"));
+          buttons.forEach((b) => {
+            const txt = (b.innerText || "").trim();
+            if (txt === "Lưu" || txt === "Nhận" || txt.includes("Lưu mã")) {
+              try {
+                b.click();
+                count++;
+              } catch (e) {}
+            }
+          });
+
+          // 2. Thu thập các dòng text chứa thông tin giảm giá/voucher trên trang
+          const elements = Array.from(document.querySelectorAll("span, div, p"));
+          elements.forEach((el) => {
+            const t = (el.innerText || "").trim();
+            if (
+              (t.includes("Giảm") || t.includes("Voucher") || t.includes("Đơn Tối Thiểu") || t.includes("Freeship")) &&
+              t.length > 5 && t.length < 80 &&
+              !vouchersFound.includes(t)
+            ) {
+              vouchersFound.push(t);
+            }
+          });
+
+          return {
+            isShopee: true,
+            collected: count,
+            vouchers: vouchersFound.slice(0, 15)
+          };
+        }
+      });
+
+      if (results && results[0] && results[0].result) {
+        return results[0].result;
+      }
+    } catch (err) {
+      console.warn("Lỗi gom voucher Shopee:", err);
+    }
+    return { isShopee: false, collected: 0, vouchers: [] };
   }
 
   // 9. Lấy nội dung từ Tab đang mở

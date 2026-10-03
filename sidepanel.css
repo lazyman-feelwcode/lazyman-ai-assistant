@@ -250,6 +250,20 @@ body {
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
+.pill-btn.voucher-pill {
+  background: linear-gradient(135deg, rgba(238, 77, 45, 0.2), rgba(249, 115, 22, 0.2));
+  border: 1px solid rgba(238, 77, 45, 0.6);
+  color: #ff643d;
+  font-weight: 600;
+}
+
+.pill-btn.voucher-pill:hover {
+  background: linear-gradient(135deg, #ee4d2d, #f97316);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 10px rgba(238, 77, 45, 0.4);
+}
+
 /* Chat Container */
 .chat-container {
   flex: 1;
