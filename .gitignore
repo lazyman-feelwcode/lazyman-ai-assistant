@@ -1,0 +1,13 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Environment & Secrets
+.env
+*.local
+
+# Logs
+*.log
+
+# Dependencies (if any)
+node_modules/
