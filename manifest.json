@@ -5,11 +5,13 @@
   "description": "Trợ lý AI & Tự động hoá cho người lười. Tóm tắt, bóc tách dữ liệu và chat với AI ngay trên mọi trang web.",
   "permissions": [
     "sidePanel",
+    "tabs",
     "activeTab",
     "scripting",
     "storage"
   ],
   "host_permissions": [
+    "<all_urls>",
     "https://generativelanguage.googleapis.com/*"
   ],
   "background": {

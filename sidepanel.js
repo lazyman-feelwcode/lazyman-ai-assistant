@@ -203,8 +203,24 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
   // 9. Lấy nội dung từ Tab đang mở
   async function getActiveTabContext() {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab || !tab.id || tab.url.startsWith("chrome://") || tab.url.startsWith("edge://")) {
+      // 1. Tìm tab đang active trong cửa sổ gần nhất (loại bỏ chính tab sidepanel)
+      let tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      let tab = tabs.find(t => t.url && !t.url.startsWith("chrome-extension://") && !t.url.startsWith("chrome://"));
+      
+      // 2. Fallback nếu không thấy trong lastFocusedWindow
+      if (!tab) {
+        tabs = await chrome.tabs.query({ active: true });
+        tab = tabs.find(t => t.url && !t.url.startsWith("chrome-extension://") && !t.url.startsWith("chrome://"));
+      }
+
+      // 3. Fallback thêm: lấy tab bất kỳ không phải extension
+      if (!tab) {
+        tabs = await chrome.tabs.query({});
+        tab = tabs.find(t => t.url && !t.url.startsWith("chrome-extension://") && !t.url.startsWith("chrome://"));
+      }
+
+      if (!tab || !tab.id) {
+        console.warn("Không tìm thấy tab web nào đang mở.");
         return null;
       }
 
@@ -215,12 +231,24 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
           const title = document.title || "";
           const url = window.location.href;
           
-          // Lấy text trên trang (cắt ngắn 12000 ký tự đầu tiên để tối ưu tốc độ)
-          const text = (document.body ? document.body.innerText : "")
-            .replace(/\s+/g, " ")
-            .slice(0, 12000);
+          // Lấy meta description nếu có
+          const metaDesc = document.querySelector('meta[name="description"]')?.content || "";
+          
+          // Lấy text trên trang (loại bỏ script/style rác, lấy text sạch)
+          let bodyClone = document.body.cloneNode(true);
+          const scripts = bodyClone.querySelectorAll("script, style, noscript, svg");
+          scripts.forEach(s => s.remove());
+          
+          let text = (bodyClone.innerText || "")
+            .replace(/\t+/g, " ")
+            .replace(/\n\s*\n/g, "\n")
+            .slice(0, 15000);
 
-          return { title, url, text: selection ? `(Đoạn văn bản bôi đen): ${selection}\n\n${text}` : text };
+          return { 
+            title, 
+            url, 
+            text: selection ? `(Văn bản người dùng bôi đen):\n${selection}\n\n(Nội dung trang web):\n${text}` : (metaDesc ? `(Mô tả trang): ${metaDesc}\n\n${text}` : text)
+          };
         },
       });
 
@@ -228,7 +256,7 @@ Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dò
         return results[0].result;
       }
     } catch (e) {
-      console.warn("Không thể trích xuất nội dung từ tab:", e);
+      console.warn("Lỗi trích xuất nội dung:", e);
     }
     return null;
   }
