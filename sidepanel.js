@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const quickActionBtns = document.querySelectorAll(".pill-btn");
 
   let apiKey = "";
-  let selectedModel = "gemini-1.5-flash";
+  let selectedModel = "gemini-flash-latest";
   let isGenerating = false;
 
   // 1. Tải cấu hình đã lưu
@@ -30,9 +30,13 @@ document.addEventListener("DOMContentLoaded", () => {
       apiKeyNotice.classList.remove("hidden");
     }
 
-    if (result.selectedModel) {
+    if (result.selectedModel && !result.selectedModel.includes("1.5") && !result.selectedModel.includes("2.0")) {
       selectedModel = result.selectedModel;
       modelSelect.value = selectedModel;
+    } else {
+      selectedModel = "gemini-flash-latest";
+      modelSelect.value = "gemini-flash-latest";
+      chrome.storage.local.set({ selectedModel: "gemini-flash-latest" });
     }
 
     if (result.chatHistory && result.chatHistory.length > 0) {
