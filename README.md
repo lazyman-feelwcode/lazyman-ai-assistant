@@ -8,12 +8,13 @@
 
 ## 🚀 Các Tính Năng Nổi Bật
 
-1. **Thanh bên Side Panel tiện lợi:** Mở song song ngay bên cạnh trang web đang xem mà không che khuất nội dung.
-2. **⚡ Tóm tắt 1-Click:** Tóm tắt bất kỳ bài viết, tài liệu dài nào thành vài gạch đầu dòng cốt lõi.
-3. **📊 Bóc tách dữ liệu:** Tự động lọc giá cả, bảng biểu, số liệu, thông tin liên hệ từ trang web hiện tại.
-4. **🛒 Soi giá & sản phẩm:** Phân tích trang sản phẩm (Shopee, TikTok Shop, Amazon...) để đánh giá ưu/nhược điểm và định giá.
-5. **💬 Trò chuyện ngữ cảnh thông minh:** Đặt câu hỏi trực tiếp về nội dung trang web bạn đang xem bằng tiếng Việt.
-6. **Chi phí $0:** Sử dụng Google Gemini API (miễn phí từ Google).
+1. **✍️ Viết bài Affiliate & Ads 1-Click:** Tự động phân tích trang sản phẩm (Shopee, TikTok Shop, Amazon...), tạo bài đăng bán hàng chuẩn SEO và kịch bản video ngắn TikTok/Reels 30s.
+2. **Thanh bên Side Panel tiện lợi:** Mở song song ngay bên cạnh trang web đang xem mà không che khuất nội dung.
+3. **⚡ Tóm tắt 1-Click:** Tóm tắt bất kỳ bài viết, tài liệu dài nào thành vài gạch đầu dòng cốt lõi.
+4. **📊 Bóc tách dữ liệu:** Tự động lọc giá cả, bảng biểu, số liệu, thông tin liên hệ từ trang web hiện tại.
+5. **🛒 Soi giá & sản phẩm:** Phân tích trang sản phẩm để đánh giá ưu/nhược điểm đối thủ và định giá.
+6. **💬 Trò chuyện ngữ cảnh thông minh:** Đặt câu hỏi trực tiếp về nội dung trang web bạn đang xem bằng tiếng Việt.
+7. **Chi phí $0:** Sử dụng Google Gemini API (miễn phí từ Google, không cần fake IP).
 
 ---
 

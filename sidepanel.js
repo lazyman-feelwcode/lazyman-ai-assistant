@@ -113,7 +113,23 @@ document.addEventListener("DOMContentLoaded", () => {
       const action = btn.dataset.action;
 
       let prompt = "";
-      if (action === "summarize") {
+      if (action === "affiliate_copy") {
+        prompt = `Bạn là một chuyên gia Copywriting & Marketing MMO hàng đầu. 
+Dựa trên toàn bộ thông tin sản phẩm trên trang web này, hãy tạo ngay một bộ nội dung bán hàng / tiếp thị liên kết (Affiliate) cực kỳ cuốn hút, gồm:
+
+1. 🎯 3 TIÊU ĐỀ BẮT TREND (Giật tít, tò mò, kích thích bấm vào).
+2. 📝 BÀI ĐĂNG FACEBOOK / THREADS / ZALO:
+   - Hook mở đầu đánh trúng nỗi đau khách hàng.
+   - 3 lợi ích vượt trội nhất của sản phẩm.
+   - Kêu gọi hành động (CTA) khéo léo để khách click link / inbox.
+   - Bộ Hashtags chuẩn SEO.
+3. 🎬 KỊCH BẢN VIDEO TIKTOK / REELS (Thời lượng 30s):
+   - [0-3s]: Hook hình ảnh / câu nói giữ chân người xem.
+   - [4-20s]: Trình diễn cách sản phẩm giải quyết vấn đề.
+   - [21-30s]: Kêu gọi ấn vào giỏ hàng / link bio.
+
+Trình bày thật chuyên nghiệp, dùng emoji sinh động, gạch đầu dòng rõ ràng để người dùng chỉ việc copy-paste là dùng được ngay!`;
+      } else if (action === "summarize") {
         prompt = "Hãy tóm tắt nội dung chính của trang web này một cách súc tích, dễ hiểu nhất (chỉ nêu 3-5 ý cốt lõi quan trọng nhất, dùng emoji và gạch đầu dòng).";
       } else if (action === "extract_data") {
         prompt = "Bóc tách toàn bộ dữ liệu quan trọng trên trang này (bao gồm: giá cả, bảng số liệu, thông số kỹ thuật, email, SĐT nếu có). Trình bày ngăn nắp dạng danh sách.";
